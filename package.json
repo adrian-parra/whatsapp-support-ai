@@ -13,12 +13,13 @@
   "dependencies": {
     "@builderbot/bot": "1.2.2",
     "@builderbot/provider-baileys": "1.2.2",
+    "dotenv": "16.4.7",
     "sharp": "0.29.3"
   },
   "devDependencies": {
+    "eslint": "8.57.0",
     "eslint-plugin-builderbot": "latest",
-    "eslint": "^8.57.0",
-    "nodemon": "^3.1.0"
+    "nodemon": "3.1.0"
   },
   "author": "",
   "license": "ISC"
