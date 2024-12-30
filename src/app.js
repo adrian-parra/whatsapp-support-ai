@@ -5,6 +5,7 @@ import { BaileysProvider as Provider } from '@builderbot/provider-baileys'
 
 const PORT = process.env.PORT ?? 3008
 
+
 const discordFlow = addKeyword('doc').addAnswer(
     ['You can see the documentation here', '📄 https://builderbot.app/docs \n', 'Do you want to continue? *yes*'].join(
         '\n'
@@ -18,6 +19,12 @@ const discordFlow = addKeyword('doc').addAnswer(
         return
     }
 )
+
+/**
+ * caul es la funcion de welcomeFlow?
+ * la funcion welcomeFlow es una funcion que se encarga de responder a los mensajes de bienvenida del usuario
+ * y le da la bienvenida al usuario
+ */
 
 const welcomeFlow = addKeyword(['hi', 'hello', 'hola'])
     .addAnswer(`🙌 Hello welcome to this *Chatbot*`)
@@ -36,6 +43,9 @@ const welcomeFlow = addKeyword(['hi', 'hello', 'hola'])
         [discordFlow]
     )
 
+/**
+ * 
+**/
 const registerFlow = addKeyword(utils.setEvent('REGISTER_FLOW'))
     .addAnswer(`What is your name?`, { capture: true }, async (ctx, { state }) => {
         await state.update({ name: ctx.body })
@@ -58,6 +68,13 @@ const fullSamplesFlow = addKeyword(['samples', utils.setEvent('SAMPLES')])
         media: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     })
 
+/**
+ * caul es la funcion de main?
+ * la funcion main es la funcion que se encarga de crear el flujo del bot
+ * y crear el provider del bot
+ * y crear la base de datos del bot
+ * y crear el servidor del bot
+ */
 const main = async () => {
     const adapterFlow = createFlow([welcomeFlow, registerFlow, fullSamplesFlow])
     
