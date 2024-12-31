@@ -3,10 +3,11 @@ import { join } from 'path'
 import { createBot, createProvider, createFlow, addKeyword, utils,EVENTS } from '@builderbot/bot'
 import { MemoryDB as Database } from '@builderbot/bot'
 import { BaileysProvider as Provider } from '@builderbot/provider-baileys'
-import { toAskGemini , toAskIngenieroDeSoftware} from './ai/gemini.js'
+import { toAskGemini} from './ai/gemini.js'
 import { fromAudioToText } from './ai/groq.js'
 import ffmpeg from 'fluent-ffmpeg'
 import { unlink } from 'fs/promises'
+import { chatWithAI } from './ai/openia.js'
 //import { toAudio } from './ai/eleventlab.js'
 const PORT = process.env.PORT ?? 3008
 
@@ -37,8 +38,14 @@ const welcomeFlow = addKeyword(EVENTS.WELCOME)
         //const textEntrenadorPersonal = await toAskEntrenadorPersonal({message,history: []})
         // Envía la respuesta procesada de vuelta al usuario
         //await flowDynamic(textEntrenadorPersonal)
-        const textIngenieroDeSoftware = await toAskIngenieroDeSoftware({message,history: []})
-        await flowDynamic(textIngenieroDeSoftware)
+        //const textIngenieroDeSoftware = await toAskIngenieroDeSoftware({message,history: []})
+        //await flowDynamic(textIngenieroDeSoftware)
+        try {
+            const textOpenIA = await chatWithAI(message)
+            await flowDynamic(textOpenIA)
+        } catch (error) {
+            await flowDynamic('*¡Lo sentimos!* 🔧\n\nDisculpe, en este momento estamos experimentando dificultades técnicas para procesar su solicitud.\n\nLe agradecemos su comprensión y le invitamos a intentarlo nuevamente en unos momentos. 🙏\n\n_El equipo de soporte está trabajando para resolver este inconveniente._')
+        }
     })
 
 const voiceFlow = addKeyword(EVENTS.VOICE_NOTE)
