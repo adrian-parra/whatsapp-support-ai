@@ -1,48 +1,85 @@
 import "dotenv/config" 
 import { join } from 'path'
-import { createBot, createProvider, createFlow, addKeyword, utils } from '@builderbot/bot'
+import { createBot, createProvider, createFlow, addKeyword, utils,EVENTS } from '@builderbot/bot'
 import { MemoryDB as Database } from '@builderbot/bot'
 import { BaileysProvider as Provider } from '@builderbot/provider-baileys'
-
+import { toAskGemini , toAskIngenieroDeSoftware} from './ai/gemini.js'
+import { fromAudioToText } from './ai/groq.js'
+import ffmpeg from 'fluent-ffmpeg'
+import { unlink } from 'fs/promises'
+//import { toAudio } from './ai/eleventlab.js'
 const PORT = process.env.PORT ?? 3008
 
 
-const discordFlow = addKeyword('doc').addAnswer(
-    ['You can see the documentation here', '📄 https://builderbot.app/docs \n', 'Do you want to continue? *yes*'].join(
-        '\n'
-    ),
-    { capture: true },
-    async (ctx, { gotoFlow, flowDynamic }) => {
-        if (ctx.body.toLocaleLowerCase().includes('yes')) {
-            return gotoFlow(registerFlow)
-        }
-        await flowDynamic('Thanks!')
-        return
-    }
-)
+
 
 /**
- * caul es la funcion de welcomeFlow?
- * la funcion welcomeFlow es una funcion que se encarga de responder a los mensajes de bienvenida del usuario
- * y le da la bienvenida al usuario
+ * @description Flujo de bienvenida del bot que maneja los mensajes iniciales de los usuarios
+ * @constant {Flow} welcomeFlow
+ * @listens {EVENTS.WELCOME} Se activa cuando un usuario inicia una conversación
+ * @example
+ * // El flujo se activa automáticamente cuando un usuario envía un mensaje inicial
+ * // Ejemplo de uso interno del bot:
+ * bot.dispatch(EVENTS.WELCOME, { from: "123456789" })
+ * 
+ * @returns {Flow} Retorna un objeto Flow configurado para el manejo de mensajes de bienvenida
  */
+const welcomeFlow = addKeyword(EVENTS.WELCOME)
+    .addAction(async (ctx, { flowDynamic }) => {
+        // Obtiene el mensaje del usuario del contexto
+        const message = ctx.body
+        
+        // Envía el mensaje a Gemini para procesamiento
+        // El array vacío [] indica que no hay historial de conversación previo
+        //const textConvertedItaliano = await toAskGemini({message,history: []})
 
-const welcomeFlow = addKeyword(['hi', 'hello', 'hola'])
-    .addAnswer(`🙌 Hello welcome to this *Chatbot*`)
-    .addAnswer(
-        [
-            'I share with you the following links of interest about the project',
-            '👉 *doc* to view the documentation',
-        ].join('\n'),
-        { delay: 800, capture: true },
-        async (ctx, { fallBack }) => {
-            if (!ctx.body.toLocaleLowerCase().includes('doc')) {
-                return fallBack('You should type *doc*')
-            }
-            return
-        },
-        [discordFlow]
-    )
+        // Envía la respuesta procesada de vuelta al usuario
+        //const textEntrenadorPersonal = await toAskEntrenadorPersonal({message,history: []})
+        // Envía la respuesta procesada de vuelta al usuario
+        //await flowDynamic(textEntrenadorPersonal)
+        const textIngenieroDeSoftware = await toAskIngenieroDeSoftware({message,history: []})
+        await flowDynamic(textIngenieroDeSoftware)
+    })
+
+const voiceFlow = addKeyword(EVENTS.VOICE_NOTE)
+    .addAction(async (ctx, { provider, flowDynamic }) => {
+        const storagePath = join(process.cwd(), 'storage')
+        const originalFilePath = await provider.saveFile(ctx, { path: storagePath })
+        
+        // Crear el nombre del archivo convertido
+        const wavFilePath = originalFilePath.replace('.oga', '.wav')
+        
+        // Convertir el archivo usando ffmpeg
+        await new Promise((resolve, reject) => {
+            ffmpeg(originalFilePath)
+                .toFormat('wav')
+                .on('end', async () => {
+                    // Eliminar el archivo .oga original después de la conversión
+                    await unlink(originalFilePath)
+                    resolve()
+                })
+                .on('error', (err) => reject(err))
+                .save(wavFilePath)
+        })
+        
+        const textConverted = await fromAudioToText(wavFilePath)
+        const textConvertedItaliano = await toAskGemini({message: textConverted, history: []})
+        //const audioResponse = await toAudio(textConvertedItaliano)
+        
+        //const fileName = `audio-${Date.now()}.mp3`;
+        //const filePath = join(process.cwd(), 'storage', fileName);
+        //console.log(filePath)
+
+        //await writeFile(filePath, audioResponse);
+
+        await flowDynamic(`Original: ${textConverted}`)
+        await flowDynamic(`Italiano: ${textConvertedItaliano}`)
+        //await flowDynamic([{ media: filePath }])
+
+        //await unlink(filePath)
+        await unlink(wavFilePath)
+
+    })
 
 /**
  * 
@@ -77,7 +114,7 @@ const fullSamplesFlow = addKeyword(['samples', utils.setEvent('SAMPLES')])
  * y crear el servidor del bot
  */
 const main = async () => {
-    const adapterFlow = createFlow([welcomeFlow, registerFlow, fullSamplesFlow])
+    const adapterFlow = createFlow([welcomeFlow, registerFlow, fullSamplesFlow, voiceFlow])
     
     const adapterProvider = createProvider(Provider)
     const adapterDB = new Database()
