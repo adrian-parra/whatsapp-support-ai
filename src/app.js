@@ -7,7 +7,8 @@ import { toAskGemini} from './ai/gemini.js'
 import { fromAudioToText } from './ai/groq.js'
 import ffmpeg from 'fluent-ffmpeg'
 import { unlink } from 'fs/promises'
-import { chatWithAI } from './ai/openia.js'
+//import { chatWithAI } from './ai/openia.js'
+import { chatWithAI21 } from './ai/ai21studio.js'
 //import { toAudio } from './ai/eleventlab.js'
 const PORT = process.env.PORT ?? 3008
 
@@ -40,9 +41,15 @@ const welcomeFlow = addKeyword(EVENTS.WELCOME)
         //await flowDynamic(textEntrenadorPersonal)
         //const textIngenieroDeSoftware = await toAskIngenieroDeSoftware({message,history: []})
         //await flowDynamic(textIngenieroDeSoftware)
+        // try {
+        //     const textOpenIA = await chatWithAI(message)
+        //     await flowDynamic(textOpenIA)
+        // } catch (error) {
+        //     await flowDynamic('*¡Lo sentimos!* 🔧\n\nDisculpe, en este momento estamos experimentando dificultades técnicas para procesar su solicitud.\n\nLe agradecemos su comprensión y le invitamos a intentarlo nuevamente en unos momentos. 🙏\n\n_El equipo de soporte está trabajando para resolver este inconveniente._')
+        // }
         try {
-            const textOpenIA = await chatWithAI(message)
-            await flowDynamic(textOpenIA)
+            const textAI21 = await chatWithAI21({message})
+            await flowDynamic(textAI21)
         } catch (error) {
             await flowDynamic('*¡Lo sentimos!* 🔧\n\nDisculpe, en este momento estamos experimentando dificultades técnicas para procesar su solicitud.\n\nLe agradecemos su comprensión y le invitamos a intentarlo nuevamente en unos momentos. 🙏\n\n_El equipo de soporte está trabajando para resolver este inconveniente._')
         }
