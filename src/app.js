@@ -120,6 +120,145 @@ const fullSamplesFlow = addKeyword(['samples', utils.setEvent('SAMPLES')])
         media: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     })
 
+// const menuFlow = addKeyword(['menu', 'opciones', 'ayuda'])
+//     .addAnswer('🎯 *MENÚ PRINCIPAL* 🎯\n' +
+//         'Selecciona una opción escribiendo el número:\n\n' +
+//         '1️⃣ *Información general*\n' +
+//         '2️⃣ *Servicios*\n' +
+//         '3️⃣ *Contacto*\n' +
+//         '4️⃣ *Horarios*\n' +
+//         '5️⃣ *Volver al menú*\n')
+//     .addAnswer('Escribe el número de la opción que deseas consultar:', { capture: true },
+//         async (ctx, { fallBack, flowDynamic }) => {
+//             const option = ctx.body.trim()
+
+//             switch (option) {
+//                 case '1':
+//                     await flowDynamic('📌 *Información General*\nAquí va la información de tu empresa...')
+//                     break
+//                 case '2':
+//                     await flowDynamic('🛠️ *Nuestros Servicios*\n1. Servicio A\n2. Servicio B\n3. Servicio C')
+//                     break
+//                 case '3':
+//                     await flowDynamic('📞 *Contacto*\nTeléfono: +XX XXXX XXXX\nEmail: ejemplo@email.com')
+//                     break
+//                 case '4':
+//                     await flowDynamic('⏰ *Horarios de Atención*\nLunes a Viernes: 9:00 - 18:00\nSábados: 9:00 - 13:00')
+//                     break
+//                 case '5':
+//                     // Volver a mostrar el menú
+//                     return fallBack()
+//                 default:
+//                     await flowDynamic('❌ Opción no válida. Por favor, selecciona un número del 1 al 5.')
+//                     return fallBack()
+//             }
+//         })
+
+const supportFlow = addKeyword(['soporte', 'ayuda', 'help', 'it'])
+    .addAnswer('🖥️ *SISTEMA DE SOPORTE TÉCNICO* 🛠️\n' +
+        'Bienvenido al sistema de soporte. ¿En qué podemos ayudarte?\n\n' +
+        '1️⃣ *Problemas con Hardware*\n' +
+        '2️⃣ *Problemas con Software*\n' +
+        '3️⃣ *Accesos y Credenciales*\n' +
+        '4️⃣ *Solicitar Equipo Nuevo*\n' +
+        '5️⃣ *Reportar Incidente*\n' +
+        '6️⃣ *Volver al menú principal*\n')
+    .addAnswer('Por favor, escribe el número de la opción que necesitas:', { capture: true },
+        async (ctx, { fallBack, flowDynamic }) => {
+            const option = ctx.body.trim()
+
+            switch (option) {
+                case '1':
+                    await flowDynamic('🔧 *PROBLEMAS DE HARDWARE*\n\n' +
+                        '1. Problemas con la laptop\n' +
+                        '2. Problemas con monitor/periféricos\n' +
+                        '3. Problemas de batería\n' +
+                        '4. Problemas de red/conexión\n\n' +
+                        'Para reportar un problema específico, escribe:\n' +
+                        '"reportar hardware: [descripción del problema]"')
+                    break
+                case '2':
+                    await flowDynamic('💻 *PROBLEMAS DE SOFTWARE*\n\n' +
+                        '1. Problemas con Windows/macOS\n' +
+                        '2. Problemas con aplicaciones corporativas\n' +
+                        '3. Actualizaciones pendientes\n' +
+                        '4. Antivirus/Seguridad\n\n' +
+                        'Para reportar un problema específico, escribe:\n' +
+                        '"reportar software: [descripción del problema]"')
+                    break
+                case '3':
+                    await flowDynamic('🔑 *ACCESOS Y CREDENCIALES*\n\n' +
+                        '• Para restablecer contraseña: "reset password"\n' +
+                        '• Para acceso a VPN: "solicitar vpn"\n' +
+                        '• Para acceso a sistemas: "acceso [nombre del sistema]"\n\n' +
+                        '📞 Contacto directo soporte:\n' +
+                        'Tel: +XX XXXX XXXX\n' +
+                        'Email: soporte@tuempresa.com')
+                    break
+                case '4':
+                    await flowDynamic('📋 *SOLICITUD DE EQUIPO NUEVO*\n\n' +
+                        'Para iniciar una solicitud, necesitamos:\n' +
+                        '1. Nombre completo\n' +
+                        '2. Departamento\n' +
+                        '3. Justificación\n' +
+                        '4. Aprobación de supervisor\n\n' +
+                        'Escribe "nueva solicitud" para comenzar el proceso')
+                    break
+                case '5':
+                    await flowDynamic('🚨 *REPORTAR INCIDENTE*\n\n' +
+                        'Por favor, proporciona:\n' +
+                        '1. Tipo de incidente\n' +
+                        '2. Descripción detallada\n' +
+                        '3. Nivel de urgencia\n\n' +
+                        'Formato: "incidente: [descripción]"\n\n' +
+                        '⚠️ Para emergencias, llamar directamente al: +XX XXXX XXXX')
+                    break
+                case '6':
+                    return fallBack()
+                default:
+                    await flowDynamic('❌ Opción no válida. Por favor, selecciona un número del 1 al 6.')
+                    return fallBack()
+            }
+        })
+
+// Flujo para reportes de hardware
+const hardwareReportFlow = addKeyword('reportar hardware:')
+    .addAction(async (ctx, { flowDynamic }) => {
+        const report = ctx.body.replace('reportar hardware:', '').trim()
+        await flowDynamic(`✅ *Reporte de Hardware Registrado*\n\n` +
+            `Ticket #${Date.now().toString().slice(-6)}\n` +
+            `Problema: ${report}\n\n` +
+            `Un técnico se pondrá en contacto contigo pronto.\n` +
+            `Tiempo estimado de respuesta: 2-4 horas hábiles.`)
+    })
+
+// Flujo para reportes de software
+const softwareReportFlow = addKeyword('reportar software:')
+    .addAction(async (ctx, { flowDynamic, provider }) => {
+        const report = ctx.body.replace('reportar software:', '').trim()
+        const ticketNumber = Date.now().toString().slice(-6)
+        
+        // Mensaje para el usuario
+        await flowDynamic(`✅ *Reporte de Software Registrado*\n\n` +
+            `Ticket #${ticketNumber}\n` +
+            `Problema: ${report}\n\n` +
+            `Un técnico se pondrá en contacto contigo pronto.\n` +
+            `Tiempo estimado de respuesta: 1-3 horas hábiles.`)
+        
+        // Notificación para el técnico
+        const technicianNumber = process.env.TECHNICIAN_PHONE
+        const notificationMessage = `🔔 *Nuevo Ticket de Software*\n\n` +
+            `Ticket #${ticketNumber}\n` +
+            `Usuario: ${ctx.from}\n` +
+            `Problema: ${report}\n\n` +
+            `Por favor, revisa este caso lo antes posible.`
+            
+        await provider.sendText(
+            `${technicianNumber}@c.us`,
+            notificationMessage
+        )
+    })
+
 /**
  * caul es la funcion de main?
  * la funcion main es la funcion que se encarga de crear el flujo del bot
@@ -128,7 +267,16 @@ const fullSamplesFlow = addKeyword(['samples', utils.setEvent('SAMPLES')])
  * y crear el servidor del bot
  */
 const main = async () => {
-    const adapterFlow = createFlow([welcomeFlow, registerFlow, fullSamplesFlow, voiceFlow])
+    const adapterFlow = createFlow([
+        welcomeFlow,
+        registerFlow,
+        fullSamplesFlow,
+        voiceFlow,
+        // menuFlow,
+        supportFlow,
+        hardwareReportFlow,
+        softwareReportFlow
+    ])
     
     const adapterProvider = createProvider(Provider)
     const adapterDB = new Database()
