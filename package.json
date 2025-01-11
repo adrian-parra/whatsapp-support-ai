@@ -20,7 +20,10 @@
     "groq-sdk": "^0.9.1",
     "node-fetch": "^3.3.2",
     "openai": "^4.77.0",
-    "sharp": "0.29.3"
+    "sharp": "0.33.5"
+  },
+  "overrides": {
+    "sharp": "0.33.5"
   },
   "devDependencies": {
     "eslint": "8.57.0",
@@ -28,5 +31,8 @@
     "nodemon": "3.1.0"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "optionalDependencies": {
+    "@img/sharp-win32-x64": "0.33.5"
+  }
 }
