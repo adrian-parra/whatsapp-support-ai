@@ -8,6 +8,8 @@ import { createBot, createProvider, createFlow } from '@builderbot/bot'
 import { MemoryDB as Database } from '@builderbot/bot'
 import { BaileysProvider as Provider } from '@builderbot/provider-baileys'
 import { flows } from "./flows/index.js"
+import "./tasks/notificationScheduler.task.js"
+
 //import { toAskGemini} from './ai/gemini.js'
 //import { fromAudioToText } from './ai/groq.js'
 //import ffmpeg from 'fluent-ffmpeg'

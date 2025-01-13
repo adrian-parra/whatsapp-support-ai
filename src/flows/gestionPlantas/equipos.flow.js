@@ -1,7 +1,6 @@
 import { addKeyword } from '@builderbot/bot'
 import { statusChecadoresController } from './controllers/checador.controller.js';
 import { formatMessage } from '../utils/messages.util.js';
-import { sendMessage } from '../../services/whatsappApi.service.js';
 
 /**
  * Flujo para obtener el estado de los checadores.
@@ -13,9 +12,6 @@ export const statusChecadoresFlow = addKeyword('checadores')
 .addAction(async (ctx, { flowDynamic }) => {
   try {
     await statusChecadoresController(flowDynamic);
-
-    await sendMessage({message:"Prueba 11000",number:"5216683972780"})
-
   } catch (error) {
     // Maneja errores que puedan ocurrir durante la ejecución del flujo.
     await flowDynamic(formatMessage({

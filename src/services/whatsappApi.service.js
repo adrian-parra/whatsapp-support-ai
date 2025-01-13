@@ -2,6 +2,7 @@
  * Envía un mensaje a través de la API de WhatsApp.
  * @param {object} params - Objeto que contiene el mensaje a enviar.
  * @param {string} params.message - El mensaje a enviar.
+ * @param {string} params.number - El numero de destino.
  * @returns {Promise<object>} - La respuesta de la API o un error.
  */
 export const sendMessage = async ({ message ,number }) => {
