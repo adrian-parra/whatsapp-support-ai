@@ -1,42 +1,32 @@
 import { addKeyword } from '@builderbot/bot'
+import { statusChecadoresController } from './controllers/checador.controller.js';
+import { formatMessage } from '../utils/messages.util.js';
+import { sendMessage } from '../../services/whatsappApi.service.js';
 
-export const statusChecadores = addKeyword('checadores')
+/**
+ * Flujo para obtener el estado de los checadores.
+ * @param {object} ctx - Contexto del flujo.
+ * @param {{ flowDynamic: Function }} options - Opciones del flujo, incluyendo la función para mostrar mensajes al usuario.
+ * @returns {Promise<void>} - Resuelve si se obtienen los estados de todos los checadores, o rechaza si hay un error.
+ */
+export const statusChecadoresFlow = addKeyword('checadores')
 .addAction(async (ctx, { flowDynamic }) => {
-    const ticketNumber = ctx.body.replace('checadores', '').trim()
+  try {
+    await statusChecadoresController(flowDynamic);
 
-    try {
+    await sendMessage({message:"Prueba 11000",number:"5216683972780"})
 
-        const formData = new FormData()
-
-        formData.append("ip", "C7TIME306")
-
-        const response = await fetch("http://172.30.106.138:7100/cmd/UptimeDeviceWmi", {
-            method: "POST",
-            body:formData
-        });
-
-        const data = await response.json();
-
-        console.log(data);
+  } catch (error) {
+    // Maneja errores que puedan ocurrir durante la ejecución del flujo.
+    await flowDynamic(formatMessage({
+      header: 'Error en el flujo de checadores',
+      body: `Ocurrió un error: ${error.message}`,
+      type: 'error'
+    }));
+    // console.error('Error en el flujo de checadores:', error);
+  }
+});
 
 
-        let message = "";
-        if (data.status !== "success") {
-            message = `✅ *Estado del Checador ${ticketNumber}*\n\n` +
-                `Estado: success \n` +
-                `Última conexión: ${data.tiempoEncendido}\n` +
-                `Tiempo de actividad: ${data.tiempoEncendido}`;
-        } else {
-            message = `❌ *Error al obtener el estado del checador ${ticketNumber}*\n\n` +
-                `Por favor, intenta de nuevo más tarde.`;
-        }
 
-        await flowDynamic(message);
-    } catch (error) {
-        await flowDynamic(`❌ *Error al obtener el estado del checador ${ticketNumber}*\n\n` +
-            `Por favor, intenta de nuevo más tarde.`);
-        console.error("Error fetching data:", error);
-    }
-
-    })
 
