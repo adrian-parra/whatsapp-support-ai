@@ -18,28 +18,25 @@ export const statusChecadoresController = async (flowDynamic) => {
 
     const hostnameChecadores = process.env.CHECADORES_HOSTNAME;
 
-    if (!hostnameChecadores) {
-        await flowDynamic(formatMessage({
-            header: "Error",
-            body: "La variable de entorno CHECADORES_HOSTNAME no está definida.",
-            type: 'error'
-        }));
-        return; // Retorna si CHECADORES_HOSTNAME no está definida
-    }
-
     const checadores = hostnameChecadores.split(',');
 
     for (const checador of checadores) {
         try {
+            // Envía un mensaje al usuario indicando que se está obteniendo el estado del checador.
+            await flowDynamic(formatMessage({
+                header: `Obteniendo estado del checador ${checador}`,
+                body: "Por favor, espera un momento...",
+                type: 'info'
+            }));
             // Consume la API para obtener el estado del checador.
             const data = await getChecadorStatusService(checador);
 
             // Muestra el estado del checador al usuario.
             await flowDynamic(formatMessage({
-                header: `Estado del Checador ${checador}`,
-                body: `Estado: Éxito\n` +
-                    `Última conexión: ${data.tiempoEncendido}\n` +
-                    `Tiempo de actividad: ${data.tiempoEncendido}`,
+                header: `Checador ${checador}: Estado Actual`,
+                body: `El checador está conectado.\n` +
+                    `Encendido el: ${data.fechaEncendido}\n` +
+                    `Tiempo de funcionamiento: ${data.tiempoEncendido}`,
             }));
         } catch (error) {
             // Maneja los errores al obtener el estado del checador.
