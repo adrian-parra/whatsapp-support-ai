@@ -1,6 +1,6 @@
 import { addKeyword } from '@builderbot/bot'
 import { statusChecadoresController } from './controllers/checador.controller.js';
-import { formatMessage } from '../utils/messages.util.js';
+import { formatMessage } from '../../../utils/messages.util.js';
 
 /**
  * Flujo para obtener el estado de los checadores.
@@ -22,7 +22,4 @@ export const statusChecadoresFlow = addKeyword('checadores')
     // console.error('Error en el flujo de checadores:', error);
   }
 });
-
-
-
 

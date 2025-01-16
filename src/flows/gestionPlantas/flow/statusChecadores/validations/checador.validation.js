@@ -1,4 +1,4 @@
-import { formatMessage } from "../../utils/messages.util.js";
+import { formatMessage } from "../../../../utils/messages.util.js";
 /**
  * Valida si las variables de entorno necesarias para la gestión de checadores están definidas.
  * @param {Function} flowDynamic - Función para mostrar mensajes al usuario.

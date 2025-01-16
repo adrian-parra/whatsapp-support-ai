@@ -1,7 +1,7 @@
 
 import { variableEntornoStatusChecadoresValidation } from "../validations/checador.validation.js";
 import { getChecadorStatusService } from "../services/checador.service.js";
-import { formatMessage } from "../../utils/messages.util.js";
+import { formatMessage } from "../../../../utils/messages.util.js";
 
 /**
  * Controlador para obtener el estado de los checadores.
