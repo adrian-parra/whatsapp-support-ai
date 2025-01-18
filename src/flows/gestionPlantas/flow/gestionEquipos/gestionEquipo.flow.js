@@ -1,90 +1,100 @@
-
-
 import { addKeyword } from '@builderbot/bot';
 import { formatMessage } from '../../../utils/messages.util.js';
-
-const equipos = {
-    '192.168.1.10': 'Servidor de Archivos',
-    '192.168.1.15': 'Servidor de Impresión',
-    'srv-pc': 'Servidor de Impresión',
-    'srv-arch': 'Servidor de Archivos',
-};
+import { obtenerInformacionEquipoController } from './controller/gestionEquipo.controller.js';
+import { reiniciarEquipoController } from './controller/gestionEquipo.controller.js';
 
 export const gestionequipoFlow = addKeyword(['equipo', 'computadora'])
-    .addAnswer('🖥️ *MENÚ DE GESTIÓN DE EQUIPOS* \n' +
-        '1️⃣ Ingresar IP o Hostname manualmente\n' +
-        '2️⃣ Seleccionar equipo de la lista\n' +
-        '3️⃣ Volver al menú principal\n',
+    .addAnswer('🖥️ *GESTIÓN DE EQUIPOS*\n' +
+        'Por favor, ingrese la IP o Hostname del equipo:',
         { capture: true },
         async (ctx, { flowDynamic, fallBack }) => {
-            const option = ctx.body.trim();
+            const equipoId = ctx.body.trim();
             
-            if (!['1', '2', '3'].includes(option)) {
-                return fallBack('❌ Por favor, seleccione una opción válida (1, 2 o 3)');
+            if (!equipoId) {
+                return fallBack('❌ Por favor, ingrese una IP o Hostname válido');
             }
 
-            switch (option) {
-                case '1':
-                    await flowDynamic('Ingrese la IP o Hostname del equipo: ', { capture: true });
-                    break;
-                case '2':
-                    await flowDynamic('Seleccione un equipo de la lista:\n' +
-                        Object.keys(equipos).map((ip, index) => `${index + 1}. ${ip} - ${equipos[ip]}`).join('\n')
-                    );
-                    break;
-                case '3':
-                    await flowDynamic('👋 *Volviendo al menú principal...*');
-                    return;
+            global.equipoSeleccionado = equipoId;
+
+            await flowDynamic(formatMessage({
+                header: '🔍 Equipo Seleccionado',
+                body: `IP/Hostname: *${equipoId}*\n\n` +
+                    'Seleccione una opción:\n' +
+                    '1️⃣ Obtener información del equipo\n' +
+                    '2️⃣ Reiniciar dispositivo'
+            }));
+        }
+    )
+    .addAnswer(
+        ['Seleccione una opción (1 o 2):'],
+        { capture: true },
+        async (ctx, { flowDynamic, fallBack, endFlow }) => {
+            const option = ctx.body.trim();
+            
+            if (!['1', '2'].includes(option)) {
+                return fallBack('❌ Por favor, seleccione una opción válida (1 o 2)');
+            }
+
+            if (option === '1') {
+                try {
+
+                    await obtenerInformacionEquipoController(flowDynamic, global.equipoSeleccionado);
+                    
+                    
+                    delete global.equipoSeleccionado;
+                    return endFlow();
+                } catch (error) {
+                    await flowDynamic(formatMessage({
+                        header: '❌ Error',
+                        body: 'No se pudo obtener la información del equipo. '+ error.message,
+                        type: 'error'
+                    }));
+                    delete global.equipoSeleccionado;
+                    return endFlow();
+                }
+            } else {
+                // Opción 2: Reiniciar
+                global.solicitaReinicio = true;
+                await flowDynamic(formatMessage({
+                    header: '⚠️ Confirmación de Reinicio',
+                    body: `¿Está seguro que desea reiniciar el dispositivo *${global.equipoSeleccionado}*?\n` +
+                        'Responda *SI* para confirmar o cualquier otra cosa para cancelar',
+                    type: 'warning'
+                }));
             }
         }
     )
     .addAnswer(
-        'Ingrese el valor:',
+        ['Confirme el reinicio:'],
         { capture: true },
-        async (ctx, { flowDynamic }) => {
-            const option = ctx.body.trim();
-            
-            if (option === '1') {
-                const searchValue = ctx.body.trim();
-                try {
-                    // Aquí puedes agregar la lógica para buscar el equipo
-                    // Por ejemplo, hacer una consulta a una base de datos o API
-                    await flowDynamic([
-                        `🔍 Buscando equipo por ${searchValue}`,
-                        // Aquí mostrarías la información del equipo encontrado
-                        `*Información del equipo:*\n` +
-                        `- IP: ${searchValue}\n` +
-                        `- Estado: 🟢 Activo\n` +
-                        `- Último registro: ${new Date().toLocaleString()}`
-                    ]);
-
-                    await flowDynamic('🤔 *¿Qué deseas hacer con este equipo?*\n' +
-                        '1️⃣ Apagar equipo\n' +
-                        '2️⃣ Ver información del equipo\n' +
-                        '3️⃣ Volver al menú principal\n');
-                } catch (error) {
-                    await flowDynamic(formatMessage({
-                        header: 'Error en la búsqueda',
-                        body: `No se pudo encontrar información del equipo: ${error.message}`,
-                        type: 'error'
-                    }));
-                }
-            } else if (option === '2') {
-                console.log("loal "+ctx.body.trim());
-                console.log("loal "+equipos['2']);
-
-                const equipo = equipos[ctx.body.trim()];
-                if (equipo) {
-                    await flowDynamic([
-                        `*Información del equipo:*\n` +
-                        `- IP: ${ctx.body.trim()}\n` +
-                        `- Estado: 🟢 Activo\n` +
-                        `- Último registro: ${new Date().toLocaleString()}`
-                    ]);
-                } else {
-                    await flowDynamic('❌ *No existe ese equipo en la lista*');
-                }
+        async (ctx, { flowDynamic, endFlow }) => {
+            // Solo procesamos si estamos esperando confirmación de reinicio
+            if (!global.solicitaReinicio) {
+                delete global.equipoSeleccionado;
+                return endFlow();
             }
+
+            const confirmation = ctx.body.trim().toUpperCase();
+            
+            if (confirmation === 'SI') {
+                await flowDynamic(formatMessage({
+                    header: '🔄 Reinicio Iniciado',
+                    body: `Se ha enviado la orden de reinicio al dispositivo *${global.equipoSeleccionado}*`,
+                    type: 'info'
+                }));
+
+                await reiniciarEquipoController(flowDynamic, global.equipoSeleccionado);
+            } else {
+                await flowDynamic(formatMessage({
+                    header: '❌ Reinicio Cancelado',
+                    body: 'La operación de reinicio ha sido cancelada',
+                    type: 'info'
+                }));
+            }
+            
+            // Limpiamos las variables globales
+            delete global.equipoSeleccionado;
+            delete global.solicitaReinicio;
+            return endFlow();
         }
     );
-

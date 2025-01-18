@@ -2,16 +2,20 @@ import { getChecadorStatusService } from '../../flows/gestionPlantas/flow/status
 import { sendMessage } from '../../services/whatsappApi.service.js';
 import { formatMessage } from '../../flows/utils/messages.util.js';
 import { getProccessInfo } from '../../services/gestionEquipoApi.service.js';
+import { validateUptimeDuration } from '../../utils/duration.util.js';
 
-export const notificationController = async ()=>{
+/**
+ * Función que se encarga de enviar notificaciones a los técnicos con el estado actual de los checadores.
+ * La función consume la API de statusChecadores y se encarga de enviar los mensajes a cada uno de los técnicos
+ * configurados en el archivo de variables de entorno (.env).
+ * @return {Promise<void>} - Resuelve si se envian todas las notificaciones sin errores.
+ */
+export const sendNotificationChecadores = async () => {
     const hostnameChecadores = process.env.CHECADORES_HOSTNAME;
 
     const checadores = hostnameChecadores.split(',');
 
     const tecnicosSupport = process.env.TECHNICIAN_PHONE_SUPPORTS;
-
-    
-
 
     for (const checador of checadores) {
         try {
@@ -41,7 +45,7 @@ export const notificationController = async ()=>{
 
             const uptimeValidation = validateUptimeDuration(data.tiempoEncendido);
             const warningMessage = uptimeValidation.exceedsFiveDays 
-                ? '\n⚠️ *ADVERTENCIA:* El checador lleva más de *5 días sin reiniciarse* por lo que se recomienda revisarlo.'
+                ? '\n *ADVERTENCIA:* El checador lleva más de *5 días sin reiniciarse* por lo que se recomienda revisarlo.'
                 : uptimeValidation.rebootMessage;
 
             for (const tecnico of tecnicosSupport.split(',')) {

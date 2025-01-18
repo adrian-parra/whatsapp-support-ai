@@ -70,3 +70,55 @@ export const getProccessInfo = async (ip) => {
         throw new Error(errorMessage);
     }
 };
+
+
+/**
+ * Obtiene información detallada de un dispositivo usando WMI
+ * @param {string} ip - IP o hostname del dispositivo
+ * @returns {Promise<Object>} - Información del dispositivo
+ * @throws {Error} - Si hay un error en la petición
+ */
+export const obtenerInfoDispositivoService = async (ip) => {
+    try {
+        const formData = new FormData();
+        formData.append("ip", ip);  
+
+        const response = await fetch(`${process.env.URL_API_FRONT}cmd/ObtenerInfoDeviceWmi`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error en la petición: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error al obtener información del dispositivo:', error);
+        throw new Error('No se pudo obtener la información del dispositivo. Por favor, verifique que esté disponible.');
+    }
+};
+
+
+
+export const restartDevice = async (ip) => {
+    try {
+        const formData = new FormData();
+        formData.append("ip", ip);  
+        const response = await fetch(`${process.env.URL_API_FRONT}cmd/RestartDeviceWmi`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error en la petición: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error al reiniciar el dispositivo:', error);
+        throw new Error('No se pudo reiniciar el dispositivo. Por favor, verifique que esté disponible.');
+    }
+};
