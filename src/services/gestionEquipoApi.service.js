@@ -102,6 +102,12 @@ export const obtenerInfoDispositivoService = async (ip) => {
 
 
 
+/**
+ * Reinicia un dispositivo remoto
+ * @param {string} ip - IP o hostname del dispositivo a reiniciar
+ * @returns {Promise<string>} - Mensaje de confirmación de la operación
+ * @throws {Error} - Si hay un error en la petición
+ */
 export const restartDevice = async (ip) => {
     try {
         const formData = new FormData();
