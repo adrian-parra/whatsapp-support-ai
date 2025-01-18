@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import { sendNotificationChecadores } from './controller/notifcationScheduler.controller.js';
 
 
-cron.schedule('30 0 * * 1-5', async () => { 
+cron.schedule('30 0 * * *', async () => { 
   try {
     await sendNotificationChecadores()
   } catch (error) {
@@ -12,7 +12,7 @@ cron.schedule('30 0 * * 1-5', async () => {
 
 console.log('Scheduler iniciado.  Las notificaciones se enviarán a las 12:30 PM.');
 
-cron.schedule('0 1 * * 1-5', async () => { 
+cron.schedule('0 1 * * *', async () => { 
   try {
     await sendNotificationChecadores()
   } catch (error) {
