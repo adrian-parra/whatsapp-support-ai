@@ -100,6 +100,27 @@ export const obtenerInfoDispositivoService = async (ip) => {
     }
 };
 
+export const obtenerStatusCpuAndMemoryService = async (ip) => {
+    try {
+        const formData = new FormData();
+        formData.append("ip", ip);  
+        const response = await fetch(`${process.env.URL_API_FRONT}cmd/GetStatusCpuAndMemory`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error en la petición: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error al obtener información del dispositivo:', error);
+        throw new Error('No se pudo obtener la información del dispositivo. Por favor, verifique que esté disponible.');
+    }
+};
+
 
 
 /**
