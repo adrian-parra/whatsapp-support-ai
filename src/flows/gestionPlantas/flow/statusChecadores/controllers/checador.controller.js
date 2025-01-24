@@ -1,78 +1,73 @@
-import { variableEntornoStatusChecadoresValidation } from "../validations/checador.validation.js";
-import { getChecadorStatusService } from "../services/checador.service.js";
 import { formatMessage } from "../../../../utils/messages.util.js";
 import { getProccessInfo } from "../../../../../services/gestionEquipoApi.service.js";
+import { getChecadorStatusService } from "../services/checador.service.js";
+import { getProgressIcon } from "../../../../utils/messages.util.js";
 import { validateUptimeDuration } from "../../../../../utils/duration.util.js";
 
 /**
  * Controlador para obtener el estado de los checadores.
- * @param {Function} flowDynamic - Función para mostrar mensajes al usuario.
- * @returns {Promise<void>} - Resuelve si se obtienen los estados de todos los checadores, o rechaza si hay un error.
+ * @param {*} flowDynamic - Función para enviar mensajes dinámicos.
+ * @param {string} hostnameChecadores - Hostnames de los checadores separados por comas.
  */
-export const statusChecadoresController = async (flowDynamic) => {
-    /**
-     * Valida las variables de entorno necesarias para la gestión de checadores.
-     */
-    if (!(await variableEntornoStatusChecadoresValidation(flowDynamic))) {
-        return; // Retorna si hay errores en las validaciones
-    }
-
-    const hostnameChecadores = process.env.CHECADORES_HOSTNAME;
+export const obtenerStatusChecadoresController = async (flowDynamic, hostnameChecadores) => {
+    // Envía un mensaje al usuario indicando que se está obteniendo el estado de los checadores.
+    await flowDynamic(formatMessage({
+        header: "Obteniendo estado de los checadores",
+        body: "Por favor, espera un momento...",
+        type: 'info'
+    }));
 
     const checadores = hostnameChecadores.split(',');
+    let currentIndex = 0;
+    const total = checadores.length;
 
     for (const checador of checadores) {
         try {
-            // Envía un mensaje al usuario indicando que se está obteniendo el estado del checador.
-            await flowDynamic(formatMessage({
-                header: `Obteniendo estado del checador ${checador}`,
-                body: "Por favor, espera un momento...",
-                type: 'info'
-            }));
-            // Consume la API para obtener el estado del checador.
-            const data = await getChecadorStatusService(checador);
+            // Obtener estado del checador y procesos
+            const statusData = await getChecadorStatusService(checador);
+            const processData = await getProccessInfo(checador);
 
-            //Consume la API para obtener la informacion de los procesos abiertos
-            const dataProccess = await getProccessInfo(checador);
+            // Verificar si la aplicación está abierta
+            const appChecadasIsOpen = processData.some(proc => proc.name === 'TIMECE Sinaloa.exe');
+            const messageStatus = appChecadasIsOpen ? 
+                "✅ App *TIMECE Sinaloa.exe* está abierta." : 
+                "❌ App *TIMECE Sinaloa.exe* no está abierta.";
 
-            console.log(dataProccess);
-
-            let appChecadasIsOpen = false;
-
-            dataProccess.forEach(element => {
-                console.log(element)
-                if (element.name == 'TIMECE Sinaloa.exe') {
-                    appChecadasIsOpen = true;
-                }
-            });
-
-            let messageIsOpenOrCloseAppChacadas = ''
-            if(!appChecadasIsOpen){
-                messageIsOpenOrCloseAppChacadas = 'App *TIMECE Sinaloa.exe* no esta abierta.'
-            }else{
-                messageIsOpenOrCloseAppChacadas = 'App *TIMECE Sinaloa.exe* esta abierta.'
-            }
-
-            const uptimeValidation = validateUptimeDuration(data.tiempoEncendido);
+            // Validar tiempo de actividad
+            const uptimeValidation = validateUptimeDuration(statusData.tiempoEncendido);
             const warningMessage = uptimeValidation.exceedsFiveDays 
                 ? '\n⚠️ *ADVERTENCIA:* El checador lleva más de *5 días sin reiniciarse* por lo que se recomienda revisarlo.'
-                : uptimeValidation.rebootMessage;
+                : uptimeValidation.rebootMessage || '';
 
-            // Muestra el estado del checador al usuario.
+            // Muestra el progreso actualizado
+            const updatedProgressBar = getProgressIcon(currentIndex + 1, total);
+
             await flowDynamic(formatMessage({
-                header: `Checador ${checador}: Estado Actual`,
-                body: `El checador está *en línea*.\n` +
-                    `${messageIsOpenOrCloseAppChacadas}\n` +
-                    `Ha estado funcionando por *${uptimeValidation.duration}*${warningMessage}`
+                header: `Estado del checador ${checador}`,
+                body: `${updatedProgressBar}\n\n` +
+                      `${messageStatus}\n` +
+                      `Ha estado funcionando por *${uptimeValidation.duration}*${warningMessage}`,
+                type: (appChecadasIsOpen && !uptimeValidation.exceedsFiveDays) ? 'success' : 'warning'
             }));
+
+            currentIndex++;
         } catch (error) {
-            // Maneja los errores al obtener el estado del checador.
+            const errorProgressBar = getProgressIcon(currentIndex + 1, total);
             await flowDynamic(formatMessage({
-                header: `Error al obtener el estado del checador ${checador}`,
-                body: "Por favor, revisa el checador manualmente.",
+                header: `❌ Error en checador ${checador}`,
+                body: `${errorProgressBar}\n\n` +
+                      `No se pudo obtener el estado del checador. ${error.message}`,
                 type: 'error'
             }));
-            console.error(`Error al obtener los datos del checador ${checador}:`, error); // Registra el error con el nombre del checador
+            currentIndex++;
         }
     }
+
+    // Mensaje final con barra de progreso completa
+    const finalProgressBar = getProgressIcon(total - 1, total);
+    await flowDynamic(formatMessage({
+        header: "✅ Verificación completada",
+        body: `${finalProgressBar}\n\nSe han verificado ${total} checadores.`,
+        type: 'success'
+    }));
 };

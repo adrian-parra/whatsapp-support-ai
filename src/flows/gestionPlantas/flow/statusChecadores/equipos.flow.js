@@ -1,5 +1,5 @@
 import { addKeyword } from '@builderbot/bot'
-import { statusChecadoresController } from './controllers/checador.controller.js';
+import { obtenerStatusChecadoresController } from './controllers/checador.controller.js';
 import { formatMessage } from '../../../utils/messages.util.js';
 
 /**
@@ -11,7 +11,7 @@ import { formatMessage } from '../../../utils/messages.util.js';
 export const statusChecadoresFlow = addKeyword('checadores')
 .addAction(async (ctx, { flowDynamic }) => {
   try {
-    await statusChecadoresController(flowDynamic);
+    await obtenerStatusChecadoresController(flowDynamic ,process.env.CHECADORES_HOSTNAME);
   } catch (error) {
     // Maneja errores que puedan ocurrir durante la ejecución del flujo.
     await flowDynamic(formatMessage({

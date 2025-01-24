@@ -3,6 +3,7 @@ import { sendMessage } from '../../services/whatsappApi.service.js';
 import { formatMessage } from '../../flows/utils/messages.util.js';
 import { getProccessInfo } from '../../services/gestionEquipoApi.service.js';
 import { validateUptimeDuration } from '../../utils/duration.util.js';
+import { getProgressIcon } from '../../flows/utils/messages.util.js';
 
 /**
  * Función que se encarga de enviar notificaciones a los técnicos con el estado actual de los checadores.
@@ -15,63 +16,67 @@ export const sendNotificationChecadores = async () => {
 
     const checadores = hostnameChecadores.split(',');
 
+    let currentIndex = 0;
+    const total = checadores.length;
+
     const tecnicosSupport = process.env.TECHNICIAN_PHONE_SUPPORTS;
 
     for (const checador of checadores) {
         try {
             // Consume la API para obtener el estado del checador.
-            const data = await getChecadorStatusService(checador);
+            const statusData = await getChecadorStatusService(checador);
 
             //Consume la API para obtener la informacion de los procesos abiertos
             const dataProccess = await getProccessInfo(checador);
 
-            console.log(dataProccess);
+            // Verificar si la aplicación está abierta
+            const appChecadasIsOpen = dataProccess.some(proc => proc.name === 'TIMECE Sinaloa.exe');
+            const messageStatus = appChecadasIsOpen ?
+                "✅ App *TIMECE Sinaloa.exe* está abierta." :
+                "❌ App *TIMECE Sinaloa.exe* no está abierta.";
 
-            let appChecadasIsOpen = false;
+            // Validar tiempo de actividad
+            const uptimeValidation = validateUptimeDuration(statusData.tiempoEncendido);
+            const warningMessage = uptimeValidation.exceedsFiveDays
+                ? '\n⚠️ *ADVERTENCIA:* El checador lleva más de *5 días sin reiniciarse* por lo que se recomienda revisarlo.'
+                : uptimeValidation.rebootMessage || '';
 
-            dataProccess.forEach(element => {
-                console.log(element)
-                if (element.name == 'TIMECE Sinaloa.exe') {
-                    appChecadasIsOpen = true;
-                }
-            });
+            // Muestra el progreso actualizado
+            const updatedProgressBar = getProgressIcon(currentIndex + 1, total);
 
-            let messageIsOpenOrCloseAppChacadas = ''
-            if(!appChecadasIsOpen){
-                messageIsOpenOrCloseAppChacadas = 'App *TIMECE Sinaloa.exe* no esta abierta.'
-            }else{
-                messageIsOpenOrCloseAppChacadas = 'App *TIMECE Sinaloa.exe* esta abierta.'
-            }
 
-            const uptimeValidation = validateUptimeDuration(data.tiempoEncendido);
-            const warningMessage = uptimeValidation.exceedsFiveDays 
-                ? '\n *ADVERTENCIA:* El checador lleva más de *5 días sin reiniciarse* por lo que se recomienda revisarlo.'
-                : uptimeValidation.rebootMessage;
+
+
 
             for (const tecnico of tecnicosSupport.split(',')) {
                 // Envía un mensaje al usuario indicando que se está obteniendo el estado del checador.
-                    await sendMessage({message:formatMessage({
-                        header: `Checador ${checador}: Estado Actual`,
-                        body: `El checador está *en línea*.\n` +
-                            `${messageIsOpenOrCloseAppChacadas}\n` +
-                            `Tiempo de funcionamiento: *${data.tiempoEncendido}*` + 
-                            `${warningMessage}`,
-                        type:'notification',
-                    }),number:tecnico});
-               
-                
+
+                await sendMessage({
+                    message: formatMessage({
+                        header: `Estado del checador ${checador}`,
+                        body: `${updatedProgressBar}\n\n` +
+                            `${messageStatus}\n` +
+                            `Ha estado funcionando por *${uptimeValidation.duration}*${warningMessage}`,
+                        type: (appChecadasIsOpen && !uptimeValidation.exceedsFiveDays) ? 'success' : 'warning'
+                    }), number: tecnico
+                });
+
+
             }
+            currentIndex++;
 
         } catch (error) {
             // Maneja los errores al obtener el estado del checador.
             for (const tecnico of tecnicosSupport.split(',')) {
-                    await sendMessage({message:formatMessage({
+                await sendMessage({
+                    message: formatMessage({
                         header: `Error al obtener el estado del checador ${checador}`,
                         body: `Por favor, revisa el checador manualmente.`,
-                        type:'notification',
-                    }),number:tecnico});
-               
-                
+                        type: 'notification',
+                    }), number: tecnico
+                });
+
+
             }
             console.error(`Error al obtener los datos del checador ${checador}:`, error); // Registra el error con el nombre del checador
         }
