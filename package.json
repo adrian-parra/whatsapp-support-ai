@@ -11,8 +11,8 @@
   },
   "keywords": [],
   "dependencies": {
-    "@builderbot/bot": "1.2.2",
-    "@builderbot/provider-baileys": "1.2.2",
+    "@builderbot/bot": "1.2.9",
+    "@builderbot/provider-baileys": "1.2.9",
     "@google/generative-ai": "^0.21.0",
     "dotenv": "16.4.7",
     "elevenlabs": "^1.50.2",
