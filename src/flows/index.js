@@ -8,6 +8,7 @@ import { welcomeFlow } from './welcome/welcome.flow.js'
 // export { equipmentStatusFlow } from './equipment/status.flow.js'
 import { statusChecadoresFlow } from './gestionPlantas/flow/statusChecadores/equipos.flow.js'
 import { gestionequipoFlow } from './gestionPlantas/flow/gestionEquipos/gestionEquipo.flow.js'
+import { checadasFlow, checadasHelpFlow } from './checadas/checadas.flow.js'
 // import { networkHelpFlow } from './support/network.flow.js'
 // import { ticketStatusFlow } from './tickets/status.flow.js'
 // import { feedbackFlow } from './tickets/feedback.flow.js'
@@ -27,7 +28,9 @@ export const flows = [
     // equipmentRequestFlow,
     // equipmentStatusFlow,
     statusChecadoresFlow,
-    gestionequipoFlow
+    gestionequipoFlow,
+    checadasFlow,
+    checadasHelpFlow
     // networkHelpFlow,
     // ticketStatusFlow,
     // feedbackFlow,
