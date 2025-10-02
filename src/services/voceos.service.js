@@ -33,15 +33,7 @@ export class VoceosService {
             
             // Preparar la consulta SQL base
             let query = `
-                SELECT TOP (1000) 
-                    [LineID],
-                    [DepartmentID],
-                    [ProblemID],
-                    [DateRegister],
-                    [Status],
-                    [DateVoice],
-                    [Desktop],
-                    [Area],
+                SELECT *,
                     CONCAT( 
                         CASE DATEPART(WEEKDAY, DateRegister) 
                             WHEN 1 THEN 'Domingo' 
@@ -73,8 +65,8 @@ export class VoceosService {
                         FORMAT(DateRegister, 'HH:mm:ss') 
                     ) AS FechaHoraLegible
                 FROM [LanpointCs].[dbo].[TBL_LineID_DepartmentID] 
-                WHERE [DateRegister] >= @startDate 
-                AND [DateRegister] < @endDate`;
+                WHERE [DateRegister] >= CAST(@startDate AS DATE) 
+                AND [DateRegister] < DATEADD(DAY, 1, CAST(@endDate AS DATE))`;
             
             // Agregar filtro de departamento si se proporciona
             if (departmentId) {
@@ -85,8 +77,8 @@ export class VoceosService {
             
             // Ejecutar la consulta con parámetros
             const request = pool.request();
-            request.input('startDate', sql.DateTime, `${startDate} 00:00:00.000`);
-            request.input('endDate', sql.DateTime, `${endDate} 23:59:59.999`);
+            request.input('startDate', sql.DateTime, `${startDate}`);
+            request.input('endDate', sql.DateTime, `${endDate}`);
             
             if (departmentId) {
                 request.input('departmentId', sql.VarChar, departmentId);

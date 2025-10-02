@@ -66,8 +66,8 @@ export class ChecadasService {
                     ) AS FechaHoraLegible 
                 FROM TBL_ChecadasSinaloa 
                 WHERE EmployeeID = @employeeId 
-                AND Date >= @startDate 
-                AND Date < @endDate
+                AND Date >= CAST(@startDate AS DATE) 
+                AND Date < DATEADD(DAY, 1, CAST(@endDate AS DATE))
                 ORDER BY Date ASC`;
             
             // Ejecutar la consulta con parámetros
