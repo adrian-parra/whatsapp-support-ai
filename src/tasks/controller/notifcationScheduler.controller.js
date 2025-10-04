@@ -83,3 +83,21 @@ export const sendNotificationChecadores = async () => {
     }
 
 }
+
+
+
+export const sendNotificationTracker = async (asignaciones = [], path = '') => {
+    for (const { phone, tracker } of asignaciones) {
+      const body = `?? *Recordatorio de entrega de tracker*\n\nTienes asignado el tracker: *${tracker}*.\nPor favor entrégalo en *Oficina de TI* antes de las *5 PM* de hoy.\nGracias.`
+  
+      try {
+        await sendMessage({
+          number: phone,
+          message: formatMessage({ header: '? Entrega de tracker', body, type: 'warning' }),
+          path: path
+        })
+      } catch (err) {
+        console.error(`Error al enviar a ${phone}:`, err)
+      }
+    }
+  }

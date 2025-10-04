@@ -5,7 +5,7 @@
  * @param {string} params.number - El numero de destino.
  * @returns {Promise<object>} - La respuesta de la API o un error.
  */
-export const sendMessage = async ({ message ,number }) => {
+export const sendMessage = async ({ message ,number, path = '' }) => {
   try {
     const response = await fetch(`${process.env.URL_API_WHATSAPP_BOT_LOCAL}messages`, {
       method: "POST",
@@ -15,6 +15,7 @@ export const sendMessage = async ({ message ,number }) => {
       body: new URLSearchParams({
         number: number,
         message: message,
+        urlMedia: path
       }),
     });
 
